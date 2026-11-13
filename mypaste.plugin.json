@@ -1,0 +1,38 @@
+{
+  "manifestVersion": 3,
+  "kind": "ui",
+  "id": "com.mypaste.httpstat",
+  "name": "HTTP 计时",
+  "version": "1.0.0",
+  "description": "打开一条链接就测量它的 HTTP 时序：DNS 解析、TCP 连接、TLS 握手、等待响应与内容传输分段计时，用瀑布图与表格对照，并列出状态码、协议、远端地址与响应头；地址可以改，随时重新计时，也能复制完整报告。计时由包内 Go 程序针对这一条地址发出一次 GET，不读取其它条目，也不把地址或结果写到别处。",
+  "capabilities": [
+    "entity.read",
+    "clipboard.write"
+  ],
+  "runtime": {
+    "protocolVersion": 2,
+    "mode": "command",
+    "entrypoint": "httpstat"
+  },
+  "surface": {
+    "entry": "preview.html",
+    "forms": [
+      "link"
+    ],
+    "role": "open",
+    "chrome": "page"
+  },
+  "commands": [
+    {
+      "id": "probe",
+      "title": "HTTP 计时",
+      "description": "对这条链接发出一次 GET，返回各阶段耗时、状态与响应头。",
+      "forms": [
+        "link"
+      ],
+      "capabilities": [
+        "entity.read"
+      ]
+    }
+  ]
+}
