@@ -1,8 +1,8 @@
-# HTTP 计时
+# httpstat
 
-MyPaste extension `com.mypaste.httpstat` (version `1.0.0`).
+MyPaste extension `com.mypaste.httpstat` (version `1.0.1`).
 
-打开一条链接就测量它的 HTTP 时序：DNS 解析、TCP 连接、TLS 握手、等待响应与内容传输分段计时，用瀑布图与表格对照，并列出状态码、协议、远端地址与响应头；地址可以改，随时重新计时，也能复制完整报告。计时由包内 Go 程序针对这一条地址发出一次 GET，不读取其它条目，也不把地址或结果写到别处。
+打开一条链接就测量它的 HTTP 时序：DNS 解析、TCP 连接、TLS 握手、等待响应与内容传输分段计时，用瀑布图与表格对照，并列出状态码、协议、远端地址与响应头；地址可以改，随时重新计时，也能复制完整报告。计时由包内 Go 程序针对这一条地址发出一次 GET，不读取其它条目，也不把地址或结果写到别处。新的报告会自己画出来：每段色条按各自的时长长到位，累计刻度在色条到达它的边界时落下；改变窗口大小只重画、不重播，系统偏好减少动态效果时整段跳过。
 
 This repository is an independent copy extracted from the former `mypaste-code-extensions` monorepo at commit `dde7b6bb20a070ddf0908034e8a873f087ff77c0`. It contains only this extension's tracked source files. The published `.mypaste-plugin` archives and marketplace index live in [`mypaste-extensions-catalog`](https://github.com/mypaste/mypaste-extensions-catalog).
 

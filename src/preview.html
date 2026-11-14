@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HTTP 计时</title>
+<title>httpstat</title>
 <style>
   :root {
     color-scheme: light;
@@ -303,6 +303,31 @@
   .anchor .dot { width: 5px; height: 5px; flex: none; border-radius: 50%; background: var(--phase); }
   .anchor b { color: var(--ink); font-weight: 600; }
 
+  /*
+   * A fresh report plays itself in: each span grows from its start edge into
+   * its share of the bar, the strip labels rise with it, and every cumulative
+   * mark drops in when the bar reaches its boundary. The page adds `.enter`
+   * only for that first arrival; a resize redraws the same markup without it,
+   * and a reduced-motion preference skips the replay entirely.
+   */
+  .segment { transition: width 380ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .enter {
+    animation-duration: 260ms;
+    animation-timing-function: ease;
+    animation-fill-mode: both;
+  }
+  .tick.enter { animation-name: tick-in; }
+  .phase-cell.enter { animation-name: cell-in; }
+  .anchor .guide.enter { animation-name: guide-in; transform-origin: top center; }
+  .anchor .ladder-label.enter { animation-name: mark-in; }
+  .phases tbody tr.enter { animation-name: row-in; }
+
+  @keyframes tick-in { from { opacity: 0; } }
+  @keyframes cell-in { from { opacity: 0; transform: translateY(3px); } }
+  @keyframes guide-in { from { transform: scaleY(0); } }
+  @keyframes mark-in { from { opacity: 0; transform: translateY(-3px); } }
+  @keyframes row-in { from { opacity: 0; transform: translateY(2px); } }
+
   .phases { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
   .phases thead th {
     padding: 0 8px 6px;
@@ -407,6 +432,13 @@
   }
   @media (prefers-reduced-motion: reduce) {
     .chevron { transition: none; }
+    .segment { transition: none; }
+    /* Every reveal rule names the same two classes as the rule it overrides. */
+    .tick.enter,
+    .phase-cell.enter,
+    .anchor .guide.enter,
+    .anchor .ladder-label.enter,
+    .phases tbody tr.enter { animation: none; }
   }
 </style>
 </head>
@@ -417,7 +449,7 @@
       <path d="M8 6.4v2.8l1.8 1.1M6.4 1.6h3.2M8 1.6V4" fill="none" stroke="currentColor"
             stroke-width="1.4" stroke-linecap="round"/>
     </svg>
-    <span class="doc-title">HTTP 计时</span>
+    <span class="doc-title">httpstat</span>
     <button id="doc-close" class="doc-close" type="button" aria-label="关闭">
       <svg viewBox="0 0 16 16" aria-hidden="true">
         <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor"

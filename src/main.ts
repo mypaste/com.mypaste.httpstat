@@ -28,6 +28,8 @@ const OWN_PLUGIN_ID = "com.mypaste.httpstat";
 const PROBE_COMMAND = "probe";
 /** Matches the runtime's own bound; the input refuses to carry more. */
 const MAX_INPUT = 4096;
+/** How long the first arrival of a report takes to draw itself in. */
+const REVEAL_MS = 620;
 
 function one<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
@@ -157,10 +159,10 @@ function render(report: Report): void {
   if (report.contentType) chips.push(report.contentType);
   facts.textContent = chips.join("  ·  ");
 
-  drawPhaseStrip(report);
-  drawTrack(report);
-  drawMarks(report);
-  drawPhases(report);
+  drawPhaseStrip(report, true);
+  drawTrack(report, true);
+  drawMarks(report, true);
+  drawPhases(report, true);
   drawHeaders(report);
   truncatedNote.hidden = !report.bodyTruncated;
   copyButton.disabled = false;
@@ -172,7 +174,7 @@ function statusTone(status: number): "ok" | "warn" | "bad" {
   return "bad";
 }
 
-function drawTrack(report: Report): void {
+function drawTrack(report: Report, animate: boolean): void {
   track.replaceChildren();
   const total = report.timings.total;
   if (total <= 0) return;
@@ -181,7 +183,17 @@ function drawTrack(report: Report): void {
     const segment = document.createElement("span");
     segment.className = `segment phase-${phase.key}`;
     segment.style.left = `${phase.offset * 100}%`;
-    segment.style.width = `${phase.width * 100}%`;
+    const width = `${phase.width * 100}%`;
+    segment.style.width = animate ? "0%" : width;
+    if (animate) {
+      // Each span grows on the clock's own proportions: it starts where it
+      // starts in the report and takes as long as it took.
+      segment.style.transitionDelay = `${Math.round(phase.offset * REVEAL_MS)}ms`;
+      segment.style.transitionDuration = `${Math.round(Math.max(140, phase.width * REVEAL_MS))}ms`;
+      requestAnimationFrame(() => {
+        segment.style.width = width;
+      });
+    }
     segment.title = `${phase.label} ${formatDuration(phase.duration)}`;
     segment.setAttribute("aria-hidden", "true");
     track.append(segment);
@@ -190,6 +202,10 @@ function drawTrack(report: Report): void {
       const tick = document.createElement("span");
       tick.className = "tick";
       tick.style.left = `${end * 100}%`;
+      if (animate) {
+        tick.classList.add("enter");
+        tick.style.animationDelay = `${Math.round(end * REVEAL_MS)}ms`;
+      }
       tick.setAttribute("aria-hidden", "true");
       track.append(tick);
     }
@@ -197,7 +213,7 @@ function drawTrack(report: Report): void {
 }
 
 /** One cell per measured span, its width following the span's share. */
-function drawPhaseStrip(report: Report): void {
+function drawPhaseStrip(report: Report, animate: boolean): void {
   phaseStrip.replaceChildren();
   const cells: Array<{ cell: HTMLDivElement; parts: HTMLElement[] }> = [];
   for (const phase of phases(report)) {
@@ -205,6 +221,10 @@ function drawPhaseStrip(report: Report): void {
     const cell = document.createElement("div");
     cell.className = `phase-cell phase-${phase.key}`;
     cell.style.flex = `0 0 ${phase.width * 100}%`;
+    if (animate) {
+      cell.classList.add("enter");
+      cell.style.animationDelay = `${Math.round(phase.offset * REVEAL_MS)}ms`;
+    }
     cell.title = `${phase.label} · ${formatDuration(phase.duration)}`;
     const head = document.createElement("span");
     head.className = "phase-head";
@@ -234,7 +254,7 @@ function drawPhaseStrip(report: Report): void {
  * the document: each label is placed beside its guide, then stacked into the
  * first lane whose last label it does not touch.
  */
-function drawMarks(report: Report): void {
+function drawMarks(report: Report, animate: boolean): void {
   ladder.replaceChildren();
   const width = track.clientWidth;
   if (width <= 0) {
@@ -252,6 +272,14 @@ function drawMarks(report: Report): void {
     guide.setAttribute("aria-hidden", "true");
     const label = document.createElement("span");
     label.className = "ladder-label";
+    if (animate) {
+      // The guide appears once the growing bar has reached its boundary.
+      const at = Math.round(60 + mark.ratio * REVEAL_MS);
+      guide.classList.add("enter");
+      guide.style.animationDelay = `${at}ms`;
+      label.classList.add("enter");
+      label.style.animationDelay = `${at}ms`;
+    }
     const dot = document.createElement("i");
     dot.className = "dot";
     dot.setAttribute("aria-hidden", "true");
@@ -295,11 +323,15 @@ function cell(text: string): HTMLTableCellElement {
   return cellElement;
 }
 
-function drawPhases(report: Report): void {
+function drawPhases(report: Report, animate: boolean): void {
   phasesBody.replaceChildren();
-  for (const phase of phases(report)) {
+  for (const [index, phase] of phases(report).entries()) {
     const row = document.createElement("tr");
     row.className = `phase-${phase.key}`;
+    if (animate) {
+      row.classList.add("enter");
+      row.style.animationDelay = `${Math.round(220 + index * 45)}ms`;
+    }
     const name = document.createElement("th");
     name.scope = "row";
     const swatch = document.createElement("i");
@@ -370,8 +402,8 @@ window.addEventListener("resize", () => {
   cancelAnimationFrame(resizeFrame);
   resizeFrame = requestAnimationFrame(() => {
     if (lastReport === null) return;
-    drawPhaseStrip(lastReport);
-    drawMarks(lastReport);
+    drawPhaseStrip(lastReport, false);
+    drawMarks(lastReport, false);
   });
 });
 
